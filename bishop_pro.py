@@ -14,7 +14,7 @@ if st.session_state.verrouille:
     st.title("🔒 Accès Restreint : GEO-BISHOP")
     mot_de_passe = st.text_input("Veuillez saisir le mot de passe pour accéder au modèle :", type="password")
     if st.button("Valider l'accès"):
-        if mot_de_passe == "12345":  # MODIFIE LE MOT DE PASSE ICI
+        if mot_de_passe == "10203040":  # MODIFIE LE MOT DE PASSE ICI
             st.session_state.verrouille = False
             st.rerun()
         else:
