@@ -6,6 +6,21 @@ from matplotlib.patches import Polygon
 from matplotlib.cm import ScalarMappable
 from scipy.optimize import minimize
 
+# --- GESTION DU VERROUILLAGE (AJOUTÉ) ---
+if 'verrouille' not in st.session_state:
+    st.session_state.verrouille = True
+
+if st.session_state.verrouille:
+    st.title("🔒 Accès Restreint : GEO-BISHOP")
+    mot_de_passe = st.text_input("Veuillez saisir le mot de passe pour accéder au modèle :", type="password")
+    if st.button("Valider l'accès"):
+        if mot_de_passe == "12345":  # MODIFIE LE MOT DE PASSE ICI
+            st.session_state.verrouille = False
+            st.rerun()
+        else:
+            st.error("❌ Mot de passe incorrect.")
+    st.stop()
+
 # --- 1. STRUCTURE ET MOTEUR DE CALCUL BISHOP ---
 class CoucheSol:
     def __init__(self, nom, y_top, y_bot, c, phi, gamma, color):
@@ -119,6 +134,7 @@ def preparer_couches():
     couches[-1].y_bot = -40 
     return couches
 
+# --- 3. LOGIQUE D'AFFICHAGE ---
 col_btn1, col_btn2 = st.columns(2)
 
 if col_btn1.button("👁️ Afficher la Stratigraphie"):
@@ -130,7 +146,7 @@ if col_btn1.button("👁️ Afficher la Stratigraphie"):
         fig, ax = plt.subplots(figsize=(12, 7))
         for c in couches:
             ax.fill_between([-L, L*2], c.y_bot, c.y_top, color=c.color, alpha=0.5, 
-                            label=f"{c.nom} (c'={c.c}kPa, φ'={c.phi_deg}°, γ={c.gamma}kN/m³)")
+                            label=f"{c.nom} (c'={c.c}kPa, φ'={c.phi_deg}°)")
         ax.add_patch(Polygon([(-L, 0), (0, 0), (L, H), (L*2, H), (L*2, H+50), (-L, H+50)], facecolor='white', zorder=2))
         ax.plot([-L, 0, L, L*2], [0, 0, H, H], 'k-', lw=3, zorder=3)
         if nappe_active:
@@ -191,3 +207,5 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
                 c2.warning(f"### ⚠️ STABILITÉ PRÉCAIRE (Fs = {best_fs:.3f})")
             else:
                 c2.success(f"### ✅ STABILITÉ CONFIRMÉE (Fs = {best_fs:.3f})")
+
+#
