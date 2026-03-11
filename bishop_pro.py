@@ -16,18 +16,6 @@ class CoucheSol:
         self.phi = math.radians(phi)
         self.gamma, self.color = gamma, color
 
-# --- LOGIQUE ADAPTATIVE ---
-def get_rayon_adaptatif(xc, yc, y_nappe, couches, H):
-    R_base = math.sqrt((xc - 0)**2 + (yc - 0)**2)
-    couches_molles = [c for c in couches if c.c < 10 and c.y_bot < 0]
-    profondeur_molle = min([c.y_bot for c in couches_molles], default=0)
-    k = 1.1
-    if profondeur_molle < 0:
-        k += abs(profondeur_molle) / (H * 2) 
-    if y_nappe > -1.0:
-        k += 0.2
-    return R_base * min(k, 1.5)
-
 def get_parametres_expert(y_m, y_surf, couches):
     c_base, phi_base, poids_total = 0, 0, 0
     for c in couches:
@@ -119,6 +107,7 @@ def preparer_couches():
     couches[-1].y_bot = -40 
     return couches
 
+# --- 3. LOGIQUE D'AFFICHAGE ---
 col_btn1, col_btn2 = st.columns(2)
 
 if col_btn1.button("👁️ Afficher la Stratigraphie"):
@@ -130,14 +119,16 @@ if col_btn1.button("👁️ Afficher la Stratigraphie"):
         fig, ax = plt.subplots(figsize=(12, 7))
         for c in couches:
             ax.fill_between([-L, L*2], c.y_bot, c.y_top, color=c.color, alpha=0.5, 
-                            label=f"{c.nom} (c'={c.c}kPa, φ'={c.phi_deg}°, γ={c.gamma}kN/m³)")
+                            label=f"{c.nom} (c'={c.c}kPa, φ'={c.phi_deg}°)")
         ax.add_patch(Polygon([(-L, 0), (0, 0), (L, H), (L*2, H), (L*2, H+50), (-L, H+50)], facecolor='white', zorder=2))
         ax.plot([-L, 0, L, L*2], [0, 0, H, H], 'k-', lw=3, zorder=3)
         if nappe_active:
             ax.axhline(y_nappe, color='#0277BD', ls='-.', lw=2, label=f"Nappe ({y_nappe}m)", zorder=5)
-        ax.set_xlabel("Distance (m)"); ax.set_ylabel("Altitude (m)")
+        ax.set_xlabel("Distance (m)")
+        ax.set_ylabel("Altitude (m)")
         ax.set_aspect('equal')
-        ax.set_xlim(-L*0.4, L*1.7); ax.set_ylim(-20, H+10)
+        ax.set_xlim(-L*0.4, L*1.7)
+        ax.set_ylim(-20, H+10)
         ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1), title="Propriétés Mécaniques")
         plt.tight_layout()
         st.pyplot(fig)
@@ -152,13 +143,14 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
             best_fs, best_params, best_slices = 9.99, None, []
             for xc in np.linspace(-L*0.2, L*1.2, 12):
                 for yc in np.linspace(H*1.1, H*2.2, 12):
-                    R = get_rayon_adaptatif(xc, yc, y_nappe, couches, H)
+                    R = math.sqrt((xc - 0)**2 + (yc - 0)**2) * 1.1
                     fs, tranches = calcul_bishop_expert((xc, yc, R), couches, H, L, y_nappe, nappe_active, return_slices=True)
                     if 0.6 < fs < best_fs:
                         best_fs, best_params, best_slices = fs, (xc, yc, R), tranches
 
             fig, ax = plt.subplots(figsize=(14, 8))
             for c in couches:
+                # Mise à jour ici pour inclure les propriétés dans la légende
                 ax.fill_between([-L, L*2], c.y_bot, c.y_top, color=c.color, alpha=0.3, 
                                 label=f"{c.nom} (c'={c.c}kPa, φ'={c.phi_deg}°, γ={c.gamma}kN/m³)")
             ax.add_patch(Polygon([(-L, 0), (0, 0), (L, H), (L*2, H), (L*2, H+50), (-L, H+50)], facecolor='white', zorder=2))
@@ -175,9 +167,11 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
             sm = ScalarMappable(norm=norm, cmap=cmap)
             cbar = plt.colorbar(sm, ax=ax, orientation='horizontal', fraction=0.03, pad=0.15)
             cbar.set_label("Ratio de Stabilité Local (Tranches)", fontsize=10)
-            ax.set_xlabel("Distance (m)"); ax.set_ylabel("Altitude (m)")
+            ax.set_xlabel("Distance (m)")
+            ax.set_ylabel("Altitude (m)")
             ax.set_aspect('equal')
-            ax.set_xlim(-L*0.4, L*1.7); ax.set_ylim(-20, H*1.3)
+            ax.set_xlim(-L*0.4, L*1.7)
+            ax.set_ylim(-20, H*1.3)
             ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1))
             plt.title(f"ANALYSE DE STABILITÉ - MÉTHODE DE BISHOP\nFacteur de Sécurité Global : {best_fs:.3f}", fontweight='bold')
             st.pyplot(fig)
@@ -187,7 +181,10 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
             c1.metric("F.S. Calculé", f"{best_fs:.3f}")
             if best_fs < 1.0:
                 c2.error(f"### ❌ RUPTURE (Fs = {best_fs:.3f})")
+                c2.write("Instabilité majeure. Le talus ne peut pas supporter son propre poids.")
             elif best_fs < 1.5:
                 c2.warning(f"### ⚠️ STABILITÉ PRÉCAIRE (Fs = {best_fs:.3f})")
+                c2.write("Le talus est stable mais avec une marge de sécurité insuffisante.")
             else:
                 c2.success(f"### ✅ STABILITÉ CONFIRMÉE (Fs = {best_fs:.3f})")
+                c2.write("Le massif présente une sécurité satisfaisante.")
