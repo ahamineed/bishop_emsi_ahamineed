@@ -74,8 +74,8 @@ def calcul_bishop_expert(params, couches, H, L, y_nappe, nappe_active, return_sl
     return (fs, slices_data) if return_slices else fs
 
 # --- 2. INTERFACE UTILISATEUR ---
-st.set_page_config(page_title="GEO-STAB", layout="wide")
-st.title("🏗️ GEO-STAB : Analyse de Stabilité des talus (Méthode de Bishop)")
+st.set_page_config(page_title="GEO-BISHOP", layout="wide")
+st.title("🏗️ GEO-BISHOP : Analyse de Stabilité des talus (Méthode de Bishop)")
 
 def valider_parametres():
     erreurs = []
