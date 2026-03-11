@@ -16,21 +16,6 @@ class CoucheSol:
         self.phi = math.radians(phi)
         self.gamma, self.color = gamma, color
 
-# --- LOGIQUE ADAPTATIVE (Ajoutée) ---
-def get_rayon_adaptatif(xc, yc, y_nappe, couches, H):
-    R_base = math.sqrt((xc - 0)**2 + (yc - 0)**2)
-    # Détection de faiblesse : couche avec c' < 10 sous le niveau 0
-    couches_molles = [c for c in couches if c.c < 10 and c.y_bot < 0]
-    profondeur_molle = min([c.y_bot for c in couches_molles], default=0)
-    
-    k = 1.1 # Coefficient de base original
-    if profondeur_molle < 0:
-        k += abs(profondeur_molle) / (H * 2) 
-    if y_nappe > -1.0:
-        k += 0.2
-        
-    return R_base * min(k, 1.5)
-
 def get_parametres_expert(y_m, y_surf, couches):
     c_base, phi_base, poids_total = 0, 0, 0
     for c in couches:
@@ -102,6 +87,7 @@ st.header("🌍 Stratigraphie")
 nb_c = st.number_input("Nombre de couches géologiques", 1, 6, 2)
 data_c = []
 colors_list = ['#8D6E63', '#D7CCC8', '#A1887F', '#BCAAA4', '#E0E0E0', '#BDBDBD']
+
 cols_c = st.columns(nb_c)
 for i in range(nb_c):
     with cols_c[i]:
@@ -122,6 +108,7 @@ def preparer_couches():
     couches[-1].y_bot = -40 
     return couches
 
+# --- 3. LOGIQUE D'AFFICHAGE ---
 col_btn1, col_btn2 = st.columns(2)
 
 if col_btn1.button("👁️ Afficher la Stratigraphie"):
@@ -132,7 +119,8 @@ if col_btn1.button("👁️ Afficher la Stratigraphie"):
         couches = preparer_couches()
         fig, ax = plt.subplots(figsize=(12, 7))
         for c in couches:
-            ax.fill_between([-L, L*2], c.y_bot, c.y_top, color=c.color, alpha=0.5, label=f"{c.nom} (c'={c.c}kPa, φ'={c.phi_deg}°)")
+            ax.fill_between([-L, L*2], c.y_bot, c.y_top, color=c.color, alpha=0.5, 
+                            label=f"{c.nom} (c'={c.c}kPa, φ'={c.phi_deg}°)")
         ax.add_patch(Polygon([(-L, 0), (0, 0), (L, H), (L*2, H), (L*2, H+50), (-L, H+50)], facecolor='white', zorder=2))
         ax.plot([-L, 0, L, L*2], [0, 0, H, H], 'k-', lw=3, zorder=3)
         if nappe_active:
@@ -156,9 +144,7 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
             best_fs, best_params, best_slices = 9.99, None, []
             for xc in np.linspace(-L*0.2, L*1.2, 12):
                 for yc in np.linspace(H*1.1, H*2.2, 12):
-                    # --- NOUVELLE LOGIQUE RAYON ---
-                    R = get_rayon_adaptatif(xc, yc, y_nappe, couches, H)
-                    # ------------------------------
+                    R = math.sqrt((xc - 0)**2 + (yc - 0)**2) * 1.1
                     fs, tranches = calcul_bishop_expert((xc, yc, R), couches, H, L, y_nappe, nappe_active, return_slices=True)
                     if 0.6 < fs < best_fs:
                         best_fs, best_params, best_slices = fs, (xc, yc, R), tranches
