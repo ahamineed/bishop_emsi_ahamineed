@@ -407,6 +407,90 @@ def preparer_couches():
 
 col_btn1, col_btn2 = st.columns(2)
 
+
+# -------------------------------------------------
+# AFFICHAGE STRATIGRAPHIE
+# -------------------------------------------------
+
+if col_btn1.button("👁️ Afficher la Stratigraphie"):
+
+    erreurs = valider_parametres()
+
+    if erreurs:
+
+        for err in erreurs:
+            st.error(err)
+
+    else:
+
+        couches = preparer_couches()
+
+        fig, ax = plt.subplots(figsize=(12, 7))
+
+        for c in couches:
+
+            ax.fill_between(
+                [-L, L * 2],
+                c.y_bot,
+                c.y_top,
+                color=c.color,
+                alpha=0.5,
+                label=f"{c.nom} (c'={c.c}kPa, φ'={c.phi_deg}°)"
+            )
+
+        ax.add_patch(
+            Polygon(
+                [
+                    (-L, 0),
+                    (0, 0),
+                    (L, H),
+                    (L * 2, H),
+                    (L * 2, H + 50),
+                    (-L, H + 50)
+                ],
+                facecolor='white',
+                zorder=2
+            )
+        )
+
+        ax.plot(
+            [-L, 0, L, L * 2],
+            [0, 0, H, H],
+            'k-',
+            lw=3,
+            zorder=3
+        )
+
+        if nappe_active:
+
+            ax.axhline(
+                y_nappe,
+                color='#0277BD',
+                ls='-.',
+                lw=2,
+                label=f"Nappe ({y_nappe}m)",
+                zorder=5
+            )
+
+        ax.set_xlabel("Distance (m)")
+        ax.set_ylabel("Altitude (m)")
+
+        ax.set_aspect('equal')
+
+        ax.set_xlim(-L * 0.4, L * 1.7)
+        ax.set_ylim(-20, H + 10)
+
+        ax.legend(
+            loc='upper left',
+            bbox_to_anchor=(1.02, 1),
+            title="Propriétés mécaniques"
+        )
+
+        plt.tight_layout()
+
+        st.pyplot(fig)
+
+
 if col_btn2.button("🚀 Lancer l'Analyse"):
 
     erreurs = valider_parametres()
@@ -562,3 +646,32 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
             )
 
             st.pyplot(fig)
+
+            st.divider()
+
+            st.subheader("📝 Interpretation du résultat")
+
+            c1, c2 = st.columns([1, 2])
+
+            c1.metric(
+                "F.S. Calculé",
+                f"{best_fs:.3f}"
+            )
+
+            if best_fs < 1.0:
+
+                c2.error(
+                    f"### ❌ RUPTURE (Fs = {best_fs:.3f})"
+                )
+
+            elif best_fs < 1.5:
+
+                c2.warning(
+                    f"### ⚠️ STABILITÉ PRÉCAIRE (Fs = {best_fs:.3f})"
+                )
+
+            else:
+
+                c2.success(
+                    f"### ✅ STABILITÉ CONFIRMÉE (Fs = {best_fs:.3f})"
+                )
