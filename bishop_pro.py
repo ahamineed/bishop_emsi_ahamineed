@@ -218,7 +218,7 @@ def valider_parametres():
     return erreurs
 
 # -------------------------------------------------
-# SIDEBAR (CONSERVÉ)
+# SIDEBAR
 # -------------------------------------------------
 
 with st.sidebar:
