@@ -122,13 +122,13 @@ def calcul_bishop_expert(
     xc, yc, R = params
 
     if R < H * 1.2:
-        return (9.99, []) if return_slices else 9.99
+        return (9.99, [], 0) if return_slices else 9.99
 
     if yc > H * 4:
-        return (9.99, []) if return_slices else 9.99
+        return (9.99, [], 0) if return_slices else 9.99
 
     if xc < -L or xc > 2 * L:
-        return (9.99, []) if return_slices else 9.99
+        return (9.99, [], 0) if return_slices else 9.99
 
     xs = np.linspace(0.05, L - 0.05, nb_tranches)
 
@@ -209,15 +209,15 @@ def calcul_bishop_expert(
                 })
 
         if len(current_slices) < 15:
-            return (9.99, []) if return_slices else 9.99
+            return (9.99, [], 0) if return_slices else 9.99
 
         if m_m_total <= 0:
-            return (9.99, []) if return_slices else 9.99
+            return (9.99, [], 0) if return_slices else 9.99
 
         fs_new = m_r_total / m_m_total
 
         if fs_new < 0.8 or fs_new > 5:
-            return (9.99, []) if return_slices else 9.99
+            return (9.99, [], 0) if return_slices else 9.99
 
         nb_iterations = iter_num + 1
 
