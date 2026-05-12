@@ -137,8 +137,9 @@ def calcul_bishop_expert(
     fs = 1.2
 
     slices_data = []
+    nb_iterations = 0
 
-    for _ in range(60):
+    for iter_num in range(60):
 
         m_r_total = 0
         m_m_total = 0
@@ -218,13 +219,15 @@ def calcul_bishop_expert(
         if fs_new < 0.8 or fs_new > 5:
             return (9.99, []) if return_slices else 9.99
 
+        nb_iterations = iter_num + 1
+
         if abs(fs_new - fs) < 0.001:
             break
 
         fs = fs_new
         slices_data = current_slices
 
-    return (fs, slices_data) if return_slices else fs
+    return (fs, slices_data, nb_iterations) if return_slices else fs
 
 # -------------------------------------------------
 # CONFIGURATION STREAMLIT
@@ -509,6 +512,7 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
             best_fs = 9.99
             best_params = None
             best_slices = []
+            best_iterations = 0
 
             for xc in np.linspace(-L * 0.2, L * 1.2, 60):
 
@@ -522,7 +526,7 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
                         H
                     )
 
-                    fs, tranches = calcul_bishop_expert(
+                    fs, tranches, nb_iter = calcul_bishop_expert(
                         (xc, yc, R),
                         couches,
                         H,
@@ -538,6 +542,7 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
                         best_fs = fs
                         best_params = (xc, yc, R)
                         best_slices = tranches
+                        best_iterations = nb_iter
 
             fig, ax = plt.subplots(figsize=(14, 8))
 
@@ -607,7 +612,8 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
                         f"Fs={best_fs:.3f} | "
                         f"xc={xc:.2f} m | "
                         f"yc={yc:.2f} m | "
-                        f"R={R:.2f} m"
+                        f"R={R:.2f} m | "
+                        f"Itérations={best_iterations}"
                     )
                 )
 
