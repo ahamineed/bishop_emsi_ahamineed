@@ -111,7 +111,7 @@ def get_parametres_expert(y_m, y_surf, couches):
     return c_base, phi_base, poids_total
 
 # -------------------------------------------------
-# MÉTHODE DE BISHOP OPTIMISÉE (Approche GeoStudio)
+# MÉTHODE DE BISHOP OPTIMISÉE 
 # -------------------------------------------------
 
 def calcul_bishop_expert(
@@ -164,7 +164,7 @@ def calcul_bishop_expert(
             'W': W, 'u': u, 'dx': dx
         })
 
-    # 2. FILTRES PHYSIQUES GEOSTUDIO (SLOPE/W)
+    # 2. FILTRES PHYSIQUES 
     # Élimine les surfaces ne modélisant pas un vrai glissement de masse
     if len(tranches_geo) < 12:
         return (9.99, [], 0) if return_slices else 9.99
@@ -495,7 +495,7 @@ if col_btn1.button("👁️ Afficher la Stratigraphie"):
         st.pyplot(fig)
 
 # -------------------------------------------------
-# LANCEMENT ANALYSE (Méthode GeoStudio Grid & Radius)
+# LANCEMENT ANALYSE
 # -------------------------------------------------
 
 if col_btn2.button("🚀 Lancer l'Analyse"):
@@ -509,7 +509,7 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
 
     else:
 
-        with st.spinner("Recherche du cercle critique (Méthode GeoStudio)..."):
+        with st.spinner("Recherche du cercle critique ..."):
 
             couches = preparer_couches()
 
@@ -518,7 +518,7 @@ if col_btn2.button("🚀 Lancer l'Analyse"):
             best_slices = []
             best_iterations = 0
 
-            # APPROCHE GEOSTUDIO : GRILLE DENSE + LIGNES TANGENTES (RAYONS)
+            # APPROCHE : GRILLE DENSE + LIGNES TANGENTES (RAYONS)
             # 1. Grille relevée : yc min commence à 1.0*H pour imposer des centres en hauteur
             for xc in np.linspace(-L * 0.5, L * 1.5, 60):
                 for yc in np.linspace(H * 1.0, H * 4.5, 60):
